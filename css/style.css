@@ -1,0 +1,121 @@
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	font-family: "Helvetica Neue", "Arial";
+	font-weight: 300;
+	background-color: #eee;
+}
+
+table {
+	width: 100%;
+	height: 100%;
+}
+
+tr, td {
+	padding: 0;
+	margin: 0;
+	border: 0;
+}
+
+#tableContainer {
+	width: 800px;
+	height: 100%;
+	margin: auto;
+	background-color: white;
+	box-shadow: 0 0 75px 20px #4d4d4d;
+}
+
+#title {
+	text-align: center;
+}
+
+#boardContainer {
+	width: 100%;
+	text-align: center;
+	position: relative;
+}
+
+#messageContainer {
+	width: 100%;
+	height: 100%;
+	min-height: 400px;
+	background-color: rgba(0, 0, 0, 0.4);
+	position: absolute;
+	transition: opacity 0.3s;
+	opacity: 0;
+}
+
+#messageTable {
+	color: white;
+	text-align: center;
+}
+
+#board {
+	background-color: white;
+	display: inline-block;
+	margin: auto;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	overflow: auto;
+	box-shadow: 0 0 50px 0px #ccc;
+}
+
+#bottomRow {
+	vertical-align: top;
+}
+
+.paddingContainer {
+	padding: 10px;
+}
+.cell {
+	display: inline-block;
+	background-color: white;
+	width: 10px;
+	height: 10px;
+}
+
+.cell.snake {
+	background-color: #ccc;
+}
+
+.cell.snake.up {
+	border-radius: 5px 5px 0 0;
+}
+
+.cell.snake.down {
+	border-radius: 0 0 5px 5px;
+}
+
+.cell.snake.left {
+	border-radius: 5px 0 0 5px;
+}
+
+.cell.snake.right {
+	border-radius: 0 5px 5px 0;
+}
+
+.cell.snake.upleft {
+	border-radius: 5px 0 0 0;
+}
+
+.cell.snake.upright {
+	border-radius: 0 5px 0 0;
+}
+
+.cell.snake.downleft {
+	border-radius: 0 0 0 5px;
+}
+
+.cell.snake.downright {
+	border-radius: 0 0 5px 0;
+}
+
+.cell.candy {
+	background-color: green;
+	border-radius: 5px;
+}

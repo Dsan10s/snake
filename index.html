@@ -1,0 +1,69 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="css/style.css">
+
+		<script type="text/javascript" src="js/libraries/underscore.js"></script>
+		<script type="text/javascript" src="js/data_structures/queue.js"></script>
+		<script type="text/javascript" src="js/data_structures/lookupQueue.js"></script>
+		<script type="text/javascript" src="js/snake.js"></script>
+		<script type="text/javascript" src="js/board.js"></script>
+		<script type="text/javascript" src="js/controller.js"></script>
+	</head>
+	<body>
+		<!-- TODO: Remember to add an overlay to the board with instructions -->
+		<div id="tableContainer">
+			<table cellspacing="0">
+				<tbody>
+					<tr>
+						<td>
+							<div id="title" class="paddingContainer">
+								<h1>Snake</h1>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<div id="boardContainer">
+								<div id="messageContainer">
+									<table id="messageTable">
+										<tbody>
+											<tr>
+												<td>
+													<div id="mainMessageContainer">
+														<h1 id="mainMessage">
+															Welcome to Snake!
+														</h1>
+													</div>
+													<div id="messageDetailsContainer">
+														<p id="messageDetails">
+															To start or pause the game, press the spacebar
+															<br>
+															Use the arrow keys to control the snake
+														</p>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<div id="board"></div>
+							</div>
+						</td>
+					</tr>
+					<tr id="bottomRow">
+						<td>
+							<div class="paddingContainer">
+								<h3>Controls:</h3>
+								<p>Space: start/pause game</p>
+								<p>Arrow Keys: Moves snake</p>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</body>
+	<script type="text/javascript">
+		var controller = new Controller();
+	</script>
+</html>
