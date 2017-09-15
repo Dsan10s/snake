@@ -2,6 +2,8 @@
 
 To run, simply open index.html in a web browser
 
+You can also point your browser to http://web.mit.edu/dsan/www/snake/
+
 # TODO Items:
 
 - Allow the snake's starting direction to be set to a different value from up.
