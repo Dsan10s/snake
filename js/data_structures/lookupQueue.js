@@ -50,5 +50,9 @@ var LookupQueue = (function() {
 		return _queue.peek(numFromHead);
 	}
 
+	LookupQueue.prototype.getInOrderData = function() {
+		return _queue.getInOrderData();
+	}
+
 	return LookupQueue;
 })();

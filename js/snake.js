@@ -12,28 +12,15 @@ var Snake = (function() {
 			_nextDirection,
 	    _positions;
 
-	function Snake(headRow, headCol, snakeStartSize, snakeStartDirection) {
+	function Snake(headPosition, snakeStartSize, snakeStartDirection) {
 		_checkDirection(snakeStartDirection);
-		_headPosition = [headRow, headCol];
+		_headPosition = headPosition;
 		_size = snakeStartSize;
 
-		_checkDirection(snakeStartDirection);
 		_direction = snakeStartDirection;
 		_nextDirection = snakeStartDirection;
 
 		_initializeSnake();
-	}
-
-	Snake.prototype.setDirection = function(direction) {
-		if (_isValidNextDirection(direction)) {
-			_direction = direction;
-		}
-	}
-
-	Snake.prototype.setNextDirection = function(direction) {
-		if (_isValidNextDirection(direction)) {
-			_nextDirection = direction;
-		}
 	}
 
 	Snake.prototype.getDirection = function() {
@@ -44,6 +31,33 @@ var Snake = (function() {
 		return _headPosition;
 	}
 
+	/**
+	 * Sets the internal state of what direction the snake is moving in
+	 * @param {string} direction direction to set
+	 */
+	Snake.prototype.setDirection = function(direction) {
+		if (_isValidNextDirection(direction)) {
+			_direction = direction;
+		}
+	}
+
+	/**
+	 * Sets the direction that snake's should be in at the end of the update state
+	 * phase
+	 * @param {string} direction direction to set
+	 */
+	Snake.prototype.setNextDirection = function(direction) {
+		if (_isValidNextDirection(direction)) {
+			_nextDirection = direction;
+		}
+	}
+
+	/**
+	 * Gets the position of numCells cells starting from the head, and going in
+	 * order along the snake
+	 * @param {number} numCells number of cells to return
+	 * @returns {Array} array of cells starting with head
+	 */
 	Snake.prototype.getHeadEndPositions = function(numCells) {
 		var headEndPositions = [];
 		var currentHeadIndex = _positions.getSize() - 1;
@@ -54,6 +68,12 @@ var Snake = (function() {
 		return headEndPositions;
 	}
 
+	/**
+	 * Gets the position of numCells cells ending with the tail. The preceding
+	 * cells are the cells in order that lead up to the tail
+	 * @param {number} numCells number of cells to return
+	 * @returns {Array} array of cells ending with tail
+	 */
 	Snake.prototype.getTailEndPositions = function(numCells) {
 		var tailEndPositions = [];
 		var currentTailIndex = numCells-1;
@@ -63,19 +83,21 @@ var Snake = (function() {
 		return tailEndPositions;
 	}
 
-	Snake.prototype.getTailPosition = function() {
-		return _positions.peek();
-	}
-
+	/**
+	 * Gets a list of all the current snake positions in order, starting from the
+	 * tail and ending with the head
+	 * @returns {Array} array with position tuples corresponding to snake
+	 * positions
+	 */
 	Snake.prototype.getPositions = function() {
-		return _positions.getQueueData();
+		return _positions.getInOrderData();
 	}
 
 	/**
 	 * Returns the location of where the snake plans to move the next frame if it
 	 * is facing a certain direction
 	 * @param {string} direction direction to use for calculating next position
-	 * @returns [row, col] tuple representing next position
+	 * @returns {Array} [row, col] tuple representing next position
 	 */
 	Snake.prototype.getNextPosition = function(direction) {
 		_checkDirection(direction);
@@ -92,12 +114,10 @@ var Snake = (function() {
 
 	/**
 	 * Updates the snake's internal state based on the given direction 
-	 * Returns if the next state is valid, i.e., the new position is a position
-	 * already occupied by the snake 
 	 * @param {string} direction direction to use for updating state
 	 * @param {boolean} hasCandy whether or not the next position contains a candy
-	 * @returns {object} with if the state is valid, and the old tail position if
-	 * the tail moved
+	 * @returns {object} with information about parts of the state that have
+	 * changed in the new state
 	 */
 	Snake.prototype.updateState = function(direction, hasCandy) {
 		_checkDirection(direction);
@@ -161,6 +181,12 @@ var Snake = (function() {
 		_positions.enqueue(_headPosition);
 	}
 
+	/**
+	 * Checks if the given direction is a direction that the snake can turn based
+	 * on its current direction
+	 * @param {string} direction direction to check
+	 * @returns {boolean} if the direction is a valid next direction for the snake
+	 */
 	function _isValidNextDirection(direction) {
 		_checkDirection(direction);
 		return ((direction == _UP && _direction != _DOWN) ||

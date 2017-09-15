@@ -13,7 +13,7 @@ var Board = (function() {
 			_snake,
 			_cells;
 
-	// obj for fast lookup, keys are [row, val] tuples (arrays)
+	// set for fast lookup, keys are "row,col" strings
 	var _emptyCells = {};
 
 	function Board(width, height, snakeStartSize, snakeStartDirection) {
@@ -27,6 +27,10 @@ var Board = (function() {
 		_checkSnakeStartSize();
 
 		this.initializeStartState();
+	}
+
+	Board.prototype.getSnake = function() {
+		return _snake;
 	}
 
 	/**
@@ -60,7 +64,7 @@ var Board = (function() {
 	}
 
 	/**
-	 * Sets snake in center of board facing upwards
+	 * Sets snake in center of board facing in _snakeStartDirection
 	 * Places a candy randomly on the board
 	 */
 	Board.prototype.initializeStartState = function() {
@@ -70,41 +74,46 @@ var Board = (function() {
 		var centerCol = Math.floor(_width / 2);
 		var snakeHeadRow = centerRow - Math.floor(_snakeStartSize / 2);
 
-		_snake = new Snake(snakeHeadRow, centerCol, _snakeStartSize, _snakeStartDirection);
+		_snake = new Snake([snakeHeadRow, centerCol], _snakeStartSize, _snakeStartDirection);
 
-		var positions = _.keys(_snake.getPositions()).map(_stringToNumberTuple);
+		var positions = _snake.getPositions();
 
 		_.each(positions, function(pos) {
-			_setCell(pos[0], pos[1], _SNAKE_SYMBOL);
+			_setCell(pos, _SNAKE_SYMBOL);
 		});
 
 		var candyPosition = _getRandomEmptyPosition();
-		_setCell(candyPosition[0], candyPosition[1], _CANDY_SYMBOL);
+		_setCell(candyPosition, _CANDY_SYMBOL);
 	}
 
+	/**
+	 * Based on the current state, calculates what will happen in the next frame
+	 * and updates the model to match that frame
+	 * @returns {object} newStateInfo with properties needed to update the DOM
+	 */
 	Board.prototype.updateState = function() {
 		var direction = _snake.getDirection();
 		var nextPosition = _snake.getNextPosition(direction);
 		var newStateInfo = {};
-		if (!_isInBounds(nextPosition[0], nextPosition[1])) {
+		if (!_isInBounds(nextPosition)) {
 			newStateInfo.validState = false;
 		} else {
-			var hasCandy = this.hasCandyInCell(nextPosition[0], nextPosition[1]);
+			var hasCandy = this.hasCandyInCell(nextPosition);
 			newStateInfo = _snake.updateState(direction, hasCandy);
 
 			// Set the new position as having a snake
-			_setCell(nextPosition[0], nextPosition[1], _SNAKE_SYMBOL);
+			_setCell(nextPosition, _SNAKE_SYMBOL);
 
 			// Clear the tail position if the snake did not grow
 			if (newStateInfo.tailPositions.length == 3) {
 				var oldTailPosition = newStateInfo.tailPositions[2];
-				_clearCell(oldTailPosition[0], oldTailPosition[1]);
+				_clearCell(oldTailPosition);
 			}
 
 			// Set a new random empty cell as having a candy
 			if (hasCandy) {
 				var emptyPosition = _getRandomEmptyPosition();
-				_setCell(emptyPosition[0], emptyPosition[1], _CANDY_SYMBOL);
+				_setCell(emptyPosition, _CANDY_SYMBOL);
 				newStateInfo.newCandyPosition = emptyPosition;
 			}
 		}
@@ -112,33 +121,37 @@ var Board = (function() {
 		return newStateInfo;
 	}
 
-	Board.prototype.getSnakeHeadEndPositions = function(numCells) {
-		return _snake.getHeadEndPositions(numCells);
-	}
-
-	Board.prototype.getSnakeTailEndPositions = function(numCells) {
-		return _snake.getTailEndPositions(numCells);
-	}
-
-	Board.prototype.hasCandyInCell = function(row, col) {
-		_checkBounds(row, col);
+	/**
+	 * Checks if the cell specified by the given position has a candy or not
+	 * @param {Array} [row, col] tuple of position to check for candy
+	 */
+	Board.prototype.hasCandyInCell = function(pos) {
+		var row = pos[0];
+		var col = pos[1];
+		_checkBounds(pos);
 		return _cells[row][col] == _CANDY_SYMBOL;
 	}
 
-	Board.prototype.hasSnakeInCell = function(row, col) {
-		_checkBounds(row, col);
+	/**
+	 * Checks if the cell specified by the given position has a snake or not
+	 * @param {Array} pos [row, col] tuple of position to check for snake
+	 */
+	Board.prototype.hasSnakeInCell = function(pos) {
+		var row = pos[0];
+		var col = pos[1];
+		_checkBounds(pos);
 		return _cells[row][col] == _SNAKE_SYMBOL;
 	}
 
-	Board.prototype.setSnakeDirection = function(direction) {
-		_snake.setNextDirection(direction);
-	}
-
 	/**
-	 * Sets the value of a symbol in _cells
+	 * Sets a cell as as having whatever is represented by the given symbol
+	 * @param {Array} pos [row, col] tuple of position of cell to set
+	 * @param {string} symbol symbol that we would like to set in this cell
 	 */
-	function _setCell(row, col, symbol) {
-		_checkBounds(row, col);
+	function _setCell(pos, symbol) {
+		var row = pos[0];
+		var col = pos[1];
+		_checkBounds(pos);
 		_checkSymbol(symbol);
 		_cells[row][col] = symbol;
 
@@ -147,16 +160,20 @@ var Board = (function() {
 	}
 
 	/**
-	 * Empties a cell if there is any symbol in it
+	 * Empties a cell in the board
+	 * @param {Array} pos [row, col] tuple of position of cell to empty
 	 */
-	function _clearCell(row, col) {
-		_checkBounds(row, col);
+	function _clearCell(pos) {
+		var row = pos[0];
+		var col = pos[1];
+		_checkBounds(pos);
 		_cells[row][col] = null;
 		_emptyCells[[row, col]] = null;
 	}
 
 	/**
 	 * Gets a random empty position
+	 * @returns {Array} [row, col] tuple of a random empty position
 	 */
 	function _getRandomEmptyPosition() {
 		var randomPositionString = _.sample(_.keys(_emptyCells));
@@ -166,6 +183,8 @@ var Board = (function() {
 	/**
 	 * Converts a comma separated string into a tuple of numbers
 	 * @param {string} positionString
+	 * @returns {Array} [row, col] tuple of position corresponding
+	 * to positionString
 	 */
 	function _stringToNumberTuple(positionString) {
 		var numberTuple = positionString.split(',').map(function(coordString) {
@@ -176,18 +195,20 @@ var Board = (function() {
 	}
 
 	/**
-	 * Checks if the cell at the given row and column is empty
+	 * Checks if a given position is in the bounds of the board
+	 * @param {Array} pos [row, col] tuple of position to check
+	 * @returns {boolean} if the given position is in the board
 	 */
-	function _isCellEmpty(row, col) {
-		return _cells[row][col] == null;
-	}
-
-	function _isInBounds(row, col) {
+	function _isInBounds(pos) {
+		var row = pos[0];
+		var col = pos[1];
 		return (row >= 0 && row < _height && col >= 0 && col < _width);
 	}
 
 	/**
-	 * Makes sure that width and height are positive
+	 * Throws an error if the _width and _height are smaller than their minimum
+	 * allowed values
+	 * minimum values
 	 */
 	function _checkWidthAndHeight() {
 		if (_width < _MIN_WIDTH) {
@@ -201,13 +222,12 @@ var Board = (function() {
 	}
 
 	/**
-	 * Makes sure that the width and height are defined, and the given row and
-	 * column are in the bounds of the board
-	 * @param {number} row
-	 * @param {number} col
+	 * Throws an error if the given position is outside of the bounds of the board
+	 * @param {Array} pos [row, col] tuple of position to check
 	 */
-	function _checkBounds(row, col) {
-		_checkWidthAndHeight();
+	function _checkBounds(pos) {
+		var row = pos[0];
+		var col = pos[1];
 		if (row < 0 || row >= _height) {
 			throw 'ERROR: given row: ' + row + ' must be in the range [0, ' + _height + ')';
 		}
@@ -217,7 +237,7 @@ var Board = (function() {
 	}
 
 	/**
-	 * Makes sure that the given symbol is valid
+	 * Throws an error if the given symbol is invalid
 	 * @param {string} symbol
 	 */
 	function _checkSymbol(symbol) {
@@ -226,6 +246,10 @@ var Board = (function() {
 		}
 	}
 
+	/**
+	 * Throws an error if the snakeStartSize is smaller than its minimum allowed
+	 * value
+	 */
 	function _checkSnakeStartSize() {
 		if (_snakeStartSize < _MIN_SNAKE_START_SIZE) {
 			throw ('ERROR: given snake starting size of ' + _snakeStartSize + 

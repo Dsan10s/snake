@@ -57,6 +57,7 @@ var Controller = (function() {
 	var _SPACE_KEY_CODE = 32;
 
 	var _board,
+	    _snake,
 	    _dom,
 	    _gameActive,
 	    _gameOver;
@@ -66,6 +67,7 @@ var Controller = (function() {
 		                   _BOARD_HEIGHT,
 		                   _SNAKE_START_SIZE,
 		                   _SNAKE_START_DIRECTION);
+		_snake = _board.getSnake();
 		_dom = {}
 		_gameActive = false;
 		_gameOver = false;
@@ -140,12 +142,15 @@ var Controller = (function() {
 		});
 	}
 
+	/**
+	 * Renders the board model stored in the _board instance into the DOM
+	 */
 	function _renderDOMBoard() {
 		var domBoard = _dom[_BOARD_ID];
 		domBoard.innerHTML = '';
 
-		var headPositions = _board.getSnakeHeadEndPositions(2);
-		var tailPositions = _board.getSnakeTailEndPositions(2);
+		var headPositions = _snake.getHeadEndPositions(2);
+		var tailPositions = _snake.getTailEndPositions(2);
 
 		_dom.cells = [];
 		for (var rowNum = 0; rowNum < _BOARD_HEIGHT; rowNum++) {
@@ -155,9 +160,9 @@ var Controller = (function() {
 			for (var colNum = 0; colNum < _BOARD_WIDTH; colNum++) {
 				var classString = _CELL_CLASS_NAME;
 				var domCell = document.createElement('div');
-				if (_board.hasCandyInCell(rowNum, colNum)) {
+				if (_board.hasCandyInCell([rowNum, colNum])) {
 					classString += ' ' + _CANDY_CELL_CLASS_NAME;
-				} else if (_board.hasSnakeInCell(rowNum, colNum)) {
+				} else if (_board.hasSnakeInCell([rowNum, colNum])) {
 					classString += ' ' + _SNAKE_CELL_CLASS_NAME;
 				}
 				domCell.className = classString;
@@ -172,6 +177,12 @@ var Controller = (function() {
 		_setDOMSnakeEndCell(tailPositions[1], tailPositions[0]);
 	}
 
+	/**
+	 * Based on the passed new state information, updates the DOM board to match
+	 * this new state
+	 * @param {object} stateInfo information about parts of the state that have
+	 * changed since the last state
+	 */
 	function _updateDOMBoard(stateInfo) {
 		if (stateInfo.validState) {
 
@@ -197,13 +208,16 @@ var Controller = (function() {
 				_setDOMCandyCell(newCandyPosition);
 			}
 		} else {
-			// TODO: Game over!
 			_gameOver = true;
 			_pauseGame();
-			console.log('Game Over!');
 		}
 	}
 
+	/**
+	 * Sets the cell in the DOM corresponding to the passed position to represent
+	 * having a snake in that cell
+	 * @param {Array} pos array with x and y coordinates of position to set
+	 */
 	function _setDOMSnakeCell(pos) {
 		var row = pos[0];
 		var col = pos[1];
@@ -212,6 +226,17 @@ var Controller = (function() {
 		return className;
 	}
 
+	/**
+	 * Sets the cell in the DOM corresponding to the passed position to represent
+	 * having a portion of the snake body (not head or tail) in that cell.
+	 * Determines whether to round the corner of the body based on the previous
+	 * and next positions of the cells in the snake
+	 * @param {Array} nextPos array with x and y coordinates of position of next
+	 * cell of the snake after the one we are looking to set
+	 * @param {Array} pos array with x and y coordinates of position to set
+	 * @param {Array} prevPos array with x and y coordinates of position of
+	 * previous cell of the snake before the one we are looking to set
+	 */
 	function _setDOMSnakeBodyCell(nextPos, pos, prevPos) {
 		var className = _setDOMSnakeCell(pos);
 		var firstDirection = _getDirectionFromPosition(nextPos, pos);
@@ -234,6 +259,13 @@ var Controller = (function() {
 		_dom.cells[row][col].className = className;
 	}
 
+	/**
+	 * Sets the cell in the DOM corresponding to the passed position to represent
+	 * having a snake end (head or tail) in that cell
+	 * @param {Array} endPos array with x and y coordinates of position of end to set
+	 * @param {Array} prevPos array with x and y coordinates of position of snake
+	 * cell right next to the end cell (2nd cell if head, 2nd to last if tail)
+	 */
 	function _setDOMSnakeEndCell(endPos, prevPos) {
 		var row = endPos[0];
 		var col = endPos[1];
@@ -246,6 +278,15 @@ var Controller = (function() {
 		_dom.cells[row][col].className = className;
 	}
 
+	/**
+	 * Given a base position and an other position, returns the direction of the
+	 * other position relative to the base position
+	 * @param {Array} basePos array with x and y coordinates of position we'd like
+	 * to base the direction off of
+	 * @param {Array} otherPos array with x and y coordinates of position we'd
+	 * like to calculate direction relative to basePos
+	 * @returns {string} direction of otherPos from basePos
+	 */
 	function _getDirectionFromPosition(basePos, otherPos) {
 		var baseRow = basePos[0];
 		var baseCol = basePos[1];
@@ -265,6 +306,10 @@ var Controller = (function() {
 		}
 	}
 
+	/**
+	 * Given a position, sets that position in the DOM board as having a candy
+	 * @param {Array} pos array with x and y coordinates of position of candy
+	 */
 	function _setDOMCandyCell(pos) {
 		var row = pos[0];
 		var col = pos[1];
@@ -272,6 +317,12 @@ var Controller = (function() {
 		_dom.cells[row][col].className = className;
 	}
 
+	/**
+	 * Given a position, sets that position in the DOM board as being an empty
+	 * cell (no snake or candy)
+	 * @param {Array} pos array with x and y coordinates of position of cell to
+	 * clear
+	 */
 	function _clearDOMCell(pos) {
 		var row = pos[0];
 		var col = pos[1];
@@ -298,13 +349,13 @@ var Controller = (function() {
 	function _addEventListeners() {
 		document.addEventListener('keydown', function(e) {
 			if (e.keyCode == _UP_KEY_CODE) {
-				_board.setSnakeDirection(_SNAKE_UP_DIRECTION);
+				_snake.setNextDirection(_SNAKE_UP_DIRECTION);
 			} else if (e.keyCode == _DOWN_KEY_CODE) {
-				_board.setSnakeDirection(_SNAKE_DOWN_DIRECTION);
+				_snake.setNextDirection(_SNAKE_DOWN_DIRECTION);
 			} else if (e.keyCode == _LEFT_KEY_CODE) {
-				_board.setSnakeDirection(_SNAKE_LEFT_DIRECTION);
+				_snake.setNextDirection(_SNAKE_LEFT_DIRECTION);
 			} else if (e.keyCode == _RIGHT_KEY_CODE) {
-				_board.setSnakeDirection(_SNAKE_RIGHT_DIRECTION);
+				_snake.setNextDirection(_SNAKE_RIGHT_DIRECTION);
 			} else if (e.keyCode == _SPACE_KEY_CODE) {
 				if (!_gameActive) {
 					_startGame();

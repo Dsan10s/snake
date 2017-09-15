@@ -35,6 +35,12 @@ var Queue = (function() {
 		}
 	}
 
+	/**
+	 * Gets the nth item in the queue, where n is numFromHead, and the 0th item is
+	 * the next item to be dequeued
+	 * @param {number} numFromHead
+	 * @returns nth item in queue
+	 */
 	Queue.prototype.peek = function(numFromHead) {
 		if (numFromHead == undefined) {
 			numFromHead = 0;
@@ -53,6 +59,20 @@ var Queue = (function() {
 			numFromHead -= _outStack.length
 			return _inStack[numFromHead];
 		}
+	}
+
+	/**
+	 * Returns a list of all the data in the queue in order, where the 0th element
+	 * in the list is the next item to be dequeued, and the last element in the
+	 * list is the last item that was enqueued
+	 * @returns {Array} list of all elements in queue
+	 */
+	Queue.prototype.getInOrderData = function() {
+		var inOrderData = [];
+		for (var i = 0; i < _size; i++) {
+			inOrderData.push(this.peek(i));
+		}
+		return inOrderData;
 	}
 
 	return Queue;
